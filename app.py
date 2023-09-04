@@ -40,7 +40,7 @@ def display_gantt_chart(data):
     chart = alt.Chart(data).mark_bar().encode(
         x=alt.X('Start Year:Q', axis=alt.Axis(title='Year', format='.0f'), scale=alt.Scale(domain=(-2000, 2000))),
         x2=alt.X2('End Year:Q'),
-        y=alt.Y('Dynasty:N', axis=alt.Axis(title='Dynasty')),
+        y=alt.Y('Dynasty:N', axis=alt.Axis(title='Dynasty'), sort='x'),  # Sort by Start Year in descending order
         color=alt.Color('Dynasty:N', legend=None),
         tooltip=['Dynasty:N', 'King:N', 'Start Year:O', 'End Year:O', 'Capital:N', 'Successor:N', 'Achievements:N',
                  'Events:N', 'Occupied Zone:N', 'Wars:N']
@@ -51,6 +51,7 @@ def display_gantt_chart(data):
     return chart
 
 
+
 # Function to display the grouped bar chart for a specific dynasty
 def display_grouped_bar_chart(data, selected_dynasty):
     filtered_data = data[data['Dynasty'] == selected_dynasty]
@@ -58,7 +59,7 @@ def display_grouped_bar_chart(data, selected_dynasty):
                           value_vars=['Economy', 'Political', 'Science', 'Education', 'Craft', 'Humanity'],
                           var_name='Category', value_name='Value')
 
-    grouped_bar_chart = alt.Chart(melted_data).mark_bar(width=20).encode(
+    grouped_bar_chart = alt.Chart(melted_data).mark_bar(width=30).encode(
         x=alt.X('Category:N', axis=alt.Axis(title=' ')),
         y=alt.Y('sum(Value):Q', axis=alt.Axis(title=' '), scale=alt.Scale(domain=(1, 10), nice=0)),
         color=alt.Color('Category:N', legend=None),
@@ -94,29 +95,13 @@ def display_pop_chart(data, selected_dynasty):
 st.markdown("<h1 style='text-align: center;'>History Timeline</h1>", unsafe_allow_html=True)
 
 
+#Error message
+def err(msg:str):
+    st.error(msg)
+
+
 # Load existing data or create a new DataFrame
 data = load_data()
-
-# Add a search box above the Gantt chart
-search_query = st.text_input('Search for Dynasty:')
-if search_query:
-    data = data[data['Dynasty'].str.contains(search_query, case=False, na=False)]
-
-# Display the Gantt chart with zoom and pan
-chart = display_gantt_chart(data)
-st.altair_chart(chart, use_container_width=True)
-# Allow the user to select a dynasty
-selected_dynasty = st.selectbox('Select a Dynasty:', data['Dynasty'].unique())
-
-col1, col2, col3 = st.columns([2, 0.3, 3])
-
-# Display the Gantt chart and the grouped bar chart for the selected dynasty
-if selected_dynasty:
-    grouped_bar_chart = display_grouped_bar_chart(data, selected_dynasty)
-    col1.altair_chart(grouped_bar_chart, use_container_width=True)
-
-    pie_chart = display_pop_chart(data, selected_dynasty)
-    col3.plotly_chart(pie_chart, use_container_width=True)
 
 # Sidebar for user input with smaller height
 st.sidebar.header('Add New Entry')
@@ -149,15 +134,43 @@ oth = st.sidebar.number_input('Other Population:', min_value=0)
 # Add new entry to the DataFrame and update the Excel file
 if st.sidebar.button('Add Entry'):
     if start_year > end_year:
-        st.error('Start Year must be less than or equal to End Year.')
+        err('Start Year must be less than or equal to End Year.')
     else:
-        new_entry = {'Dynasty': dynasty, 'King': king, 'Start Year': start_year, 'End Year': end_year,
-                     'Capital': capital, 'Successor': successor, 'Achievements': achievement, 'Events': event,
-                     'Occupied Zone': zone, 'Wars': wars, 'Humanity': humanity, 'Economy': economy,
-                     'Education': education, 'Science': science, 'Political': political, 'Craft': craft, 'Hindu': hindu,
-                     'Muslim': mus, 'Jain': jain, 'Buddha': bud, 'Sikh': sikh, 'French': fre, 'British': bri,
-                     'Others': oth}
-        new_data = pd.DataFrame(new_entry, index=[0])
-        data = pd.concat([data, new_data], ignore_index=True)
-        data.to_excel('store.xlsx', index=False, engine='openpyxl')
-        st.experimental_rerun()
+        if any(value in ["", None] for value in [dynasty, king, capital, successor, achievement, event, zone, wars]):
+            err('1 or more field left blank')
+        else:
+            new_entry = {'Dynasty': dynasty, 'King': king, 'Start Year': start_year, 'End Year': end_year,
+                         'Capital': capital, 'Successor': successor, 'Achievements': achievement, 'Events': event,
+                         'Occupied Zone': zone, 'Wars': wars, 'Humanity': humanity, 'Economy': economy,
+                         'Education': education, 'Science': science, 'Political': political, 'Craft': craft,
+                         'Hindu': hindu,
+                         'Muslim': mus, 'Jain': jain, 'Buddha': bud, 'Sikh': sikh, 'French': fre, 'British': bri,
+                         'Others': oth}
+            new_data = pd.DataFrame(new_entry, index=[0])
+            data = pd.concat([data, new_data], ignore_index=True)
+            data.to_excel('store.xlsx', index=False, engine='openpyxl')
+            st.experimental_rerun()
+
+
+# Add a search box above the Gantt chart
+search_query = st.text_input('Search for Dynasty:')
+if search_query:
+    data = data[data['Dynasty'].str.contains(search_query, case=False, na=False)]
+
+# Display the Gantt chart with zoom and pan
+chart = display_gantt_chart(data)
+st.altair_chart(chart, use_container_width=True)
+# Allow the user to select a dynasty
+selected_dynasty = st.selectbox('Select a Dynasty:', data['Dynasty'].unique())
+
+col1, col2, col3 = st.columns([2, 0.3, 3])
+
+# Display the Gantt chart and the grouped bar chart for the selected dynasty
+if selected_dynasty:
+    grouped_bar_chart = display_grouped_bar_chart(data, selected_dynasty)
+    col1.altair_chart(grouped_bar_chart, use_container_width=True)
+
+    pie_chart = display_pop_chart(data, selected_dynasty)
+    col3.plotly_chart(pie_chart, use_container_width=True)
+
+
