@@ -30,20 +30,36 @@ st.set_page_config(
 st.markdown('''
     <style>
     footer {visibility : hidden;}
-    header {visibility : hidden;}
+    # header {visibility : hidden;}
     </style>
 ''', unsafe_allow_html=True)
 
 
 # Function to display the Altair Gantt chart
 def display_gantt_chart(data):
-    chart = alt.Chart(data).mark_bar().encode(
-        x=alt.X('Start Year:Q', axis=alt.Axis(title='Year', format='.0f'), scale=alt.Scale(domain=(-2000, 2000))),
+    def format_year(year):
+        modYear = ''
+        if year < 0:
+            modYear = f"{abs(year)} BC"
+        elif year == 0:
+            modYear = year
+        else:
+            modYear = f"{year} AD"
+
+        return modYear
+
+    # , scale = alt.Scale(domain=(-2000, 2000))
+
+    data['Beginning'] = data['Start Year'].apply(format_year)
+    data['End'] = data['End Year'].apply(format_year)
+
+    chart = alt.Chart(data).mark_bar(size=70).encode(
+        x=alt.X('Start Year:Q', axis=alt.Axis(title='Year', format='.0f', labelFontSize=14)),
         x2=alt.X2('End Year:Q'),
-        y=alt.Y('Dynasty:N', axis=alt.Axis(title='Dynasty'), sort='x'),  # Sort by Start Year in descending order
+        y=alt.Y('Dynasty:N', axis=alt.Axis(title='Dynasty', labelFontSize=14, labelFontWeight=900), sort='x'),  # Sort by Start Year in descending order
         color=alt.Color('Dynasty:N', legend=None),
-        tooltip=['Dynasty:N', 'King:N', 'Start Year:O', 'End Year:O', 'Capital:N', 'Successor:N', 'Achievements:N',
-                 'Events:N', 'Occupied Zone:N', 'Wars:N']
+        tooltip=['Dynasty:N', 'King:N', 'Beginning:N', 'End:N', 'Capital:N', 'Successor:N', 'Achievements:N',
+                 'Events:N', 'Occupied Zone:N', 'Wars:N', 'Rituals:N', 'Malpractices:N', 'Employment:N', 'Diets:N']
     ).properties(
         width=900
     ).interactive()  # Make the chart interactive with zooming and panning
@@ -56,11 +72,12 @@ def display_gantt_chart(data):
 def display_grouped_bar_chart(data, selected_dynasty):
     filtered_data = data[data['Dynasty'] == selected_dynasty]
     melted_data = pd.melt(filtered_data, id_vars=['Dynasty'],
-                          value_vars=['Economy', 'Political', 'Science', 'Education', 'Craft', 'Humanity'],
+                          value_vars=['Economy', 'Political', 'Science', 'Education', 'Craft', 'Humanity', 'Kindness',
+                                      'Law', 'Justice', 'Religion'],
                           var_name='Category', value_name='Value')
 
     grouped_bar_chart = alt.Chart(melted_data).mark_bar(width=30).encode(
-        x=alt.X('Category:N', axis=alt.Axis(title=' ')),
+        x=alt.X('Category:N', axis=alt.Axis(title=' ',labelFontSize=13, labelFontWeight='bold')),
         y=alt.Y('sum(Value):Q', axis=alt.Axis(title=' '), scale=alt.Scale(domain=(1, 10), nice=0)),
         color=alt.Color('Category:N', legend=None),
     ).properties(
@@ -82,10 +99,11 @@ def display_pop_chart(data, selected_dynasty):
     sikh_value = pie_data['Sikh'].iloc[0]
     french_value = pie_data['French'].iloc[0]
     british_value = pie_data['British'].iloc[0]
+    chri_value = pie_data['Christian'].iloc[0]
     other_value = pie_data['Others'].iloc[0]
     fig = px.pie(values=[hindu_value, muslim_value, jain_value, buddha_value, sikh_value, french_value, british_value,
-                         other_value],
-                 names=['Hindu', 'Muslim', 'Jain', 'Buddha', 'Sikh', 'French', 'British', 'Others'],
+                         other_value, chri_value],
+                 names=['Hindu', 'Muslim', 'Jain', 'Buddha', 'Sikh', 'French', 'British', 'Others', 'Christian'],
                  title=f'{selected_dynasty} Population')
     fig.update_traces(textposition='inside', textinfo='percent+label')
     return fig
@@ -113,7 +131,11 @@ capital = st.sidebar.text_input('Capital:')
 successor = st.sidebar.text_input('Successor:')
 achievement = st.sidebar.text_input('Achievements:')
 event = st.sidebar.text_input('Events:')
-zone = st.sidebar.text_input('Zone')
+zone = st.sidebar.text_input('Zone:')
+ritual = st.sidebar.text_input('Rituals:')
+malpractice= st.sidebar.text_input('Malpractices:')
+employment = st.sidebar.text_input('Employment:')
+diet = st.sidebar.text_input('Diets:')
 wars = st.sidebar.text_input('Major Wars fought:')
 humanity = st.sidebar.number_input('Humanity index:', min_value=0, max_value=10)
 economy = st.sidebar.number_input('Economy index:', min_value=0, max_value=10)
@@ -121,6 +143,10 @@ education = st.sidebar.number_input('Education index:', min_value=0, max_value=1
 science = st.sidebar.number_input('Science index:', min_value=0, max_value=10)
 political = st.sidebar.number_input('Political index:', min_value=0, max_value=10)
 craft = st.sidebar.number_input('Craft index:', min_value=0, max_value=10)
+religion = st.sidebar.number_input('Religion index:', min_value=0, max_value=10)
+kindness = st.sidebar.number_input('King\'s kindness index:', min_value=0, max_value=10)
+law = st.sidebar.number_input('Law index:', min_value=0, max_value=10)
+justice = st.sidebar.number_input('Justice index:', min_value=0, max_value=10)
 hindu = st.sidebar.number_input('Hindu Population:', min_value=0)
 mus = st.sidebar.number_input('Muslim Population:', min_value=0)
 jain = st.sidebar.number_input('Jain Population:', min_value=0)
@@ -128,6 +154,7 @@ sikh = st.sidebar.number_input('Sikh Population:', min_value=0)
 bud = st.sidebar.number_input('Buddha Population:', min_value=0)
 fre = st.sidebar.number_input('French Population:', min_value=0)
 bri = st.sidebar.number_input('British Population:', min_value=0)
+chri = st.sidebar.number_input('Christian Population', min_value=0)
 oth = st.sidebar.number_input('Other Population:', min_value=0)
 
 
@@ -136,16 +163,18 @@ if st.sidebar.button('Add Entry'):
     if start_year > end_year:
         err('Start Year must be less than or equal to End Year.')
     else:
-        if any(value in ["", None] for value in [dynasty, king, capital, successor, achievement, event, zone, wars]):
+        if any(value in ["", None] for value in [dynasty, king, capital, successor, achievement, event, zone, wars,
+                                                 ritual, malpractice, employment, diet]):
             err('1 or more field left blank')
         else:
             new_entry = {'Dynasty': dynasty, 'King': king, 'Start Year': start_year, 'End Year': end_year,
                          'Capital': capital, 'Successor': successor, 'Achievements': achievement, 'Events': event,
                          'Occupied Zone': zone, 'Wars': wars, 'Humanity': humanity, 'Economy': economy,
                          'Education': education, 'Science': science, 'Political': political, 'Craft': craft,
-                         'Hindu': hindu,
-                         'Muslim': mus, 'Jain': jain, 'Buddha': bud, 'Sikh': sikh, 'French': fre, 'British': bri,
-                         'Others': oth}
+                         'Hindu': hindu, 'Muslim': mus, 'Jain': jain, 'Buddha': bud, 'Sikh': sikh, 'French': fre,
+                         'British': bri, 'Christian': chri, 'Others': oth, 'Rituals': ritual, 'Malpractices': malpractice,
+                         'Employment': employment, 'Diets': diet, 'Kindness':kindness, 'Law': law, 'Justice': justice,
+                         'Religion': religion}
             new_data = pd.DataFrame(new_entry, index=[0])
             data = pd.concat([data, new_data], ignore_index=True)
             data.to_excel('store.xlsx', index=False, engine='openpyxl')
@@ -172,5 +201,3 @@ if selected_dynasty:
 
     pie_chart = display_pop_chart(data, selected_dynasty)
     col3.plotly_chart(pie_chart, use_container_width=True)
-
-
