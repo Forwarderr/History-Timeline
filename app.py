@@ -32,6 +32,7 @@ st.markdown('''
     <style>
     footer {visibility : hidden;}
     header {visibility : hidden;}
+    [class^="viewerBadge"] {visibility: hidden;}
     </style>
 ''', unsafe_allow_html=True)
 
