@@ -78,7 +78,7 @@ def display_grouped_bar_chart(data, selected_dynasty):
                                       'Law', 'Justice', 'Religion'],
                           var_name='Category', value_name='Value')
 
-    grouped_bar_chart = alt.Chart(melted_data).mark_bar(width=30).encode(
+    grouped_bar_chart = alt.Chart(melted_data).mark_bar().encode(
         x=alt.X('Category:N', axis=alt.Axis(title=' ',labelFontSize=13, labelFontWeight='bold')),
         y=alt.Y('sum(Value):Q', axis=alt.Axis(title=' '), scale=alt.Scale(domain=(1, 10), nice=0)),
         color=alt.Color('Category:N', legend=None),
