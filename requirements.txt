@@ -34,7 +34,7 @@ pytz-deprecation-shim
 referencing
 requests
 rich
-rpds-py
+rpds-py==0.9.2
 six
 smmap
 streamlit
