@@ -1,0 +1,6 @@
+# render.yaml
+
+services:
+  - name: Histline
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run your_app.py
