@@ -30,7 +30,7 @@ st.set_page_config(
 st.markdown('''
     <style>
     footer {visibility : hidden;}
-    # header {visibility : hidden;}
+    header {visibility : hidden;}
     </style>
 ''', unsafe_allow_html=True)
 
@@ -160,3 +160,4 @@ if st.sidebar.button('Add Entry'):
         new_data = pd.DataFrame(new_entry, index=[0])
         data = pd.concat([data, new_data], ignore_index=True)
         data.to_excel('store.xlsx', index=False, engine='openpyxl')
+        st.experimental_rerun()
