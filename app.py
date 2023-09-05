@@ -55,7 +55,7 @@ def display_gantt_chart(data):
     data['Beginning'] = data['Start Year'].apply(format_year)
     data['End'] = data['End Year'].apply(format_year)
 
-    chart = alt.Chart(data).mark_bar(size=70).encode(
+    chart = alt.Chart(data).mark_bar().encode(
         x=alt.X('Start Year:Q', axis=alt.Axis(title='Year', format='.0f', labelFontSize=13)),
         x2=alt.X2('End Year:Q'),
         y=alt.Y('Dynasty:N', axis=alt.Axis(title='Dynasty', labelFontSize=12, labelFontWeight=500), sort='x'),  # Sort by Start Year in descending order
