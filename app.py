@@ -125,7 +125,7 @@ def display_table(data):
     # Update layout for better appearance
     fig.update_layout(
         margin=dict(l=0, r=0, t=0, b=0),  # Adjust margins
-        height = 800
+        height = 700
     )
     return fig
 
@@ -264,7 +264,7 @@ if selected_dynasty:
     table = display_table(data)
     st.plotly_chart(table, use_container_width=True)
 
-col1, col2, col3 = st.columns([2, 0.3, 3])
+col1, col2, col3 = st.columns([2.5, 0.1, 3])
 
 # Display the Gantt chart and the grouped bar chart for the selected dynasty
 if selected_dynasty:
