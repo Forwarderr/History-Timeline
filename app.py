@@ -3,6 +3,7 @@ import pandas as pd
 import altair as alt
 import plotly.express as px
 from PIL import Image
+import plotly.graph_objects as go
 
 
 # Function to load data from the Excel file or create a new one if it doesn't exist
@@ -58,15 +59,74 @@ def display_gantt_chart(data):
         x2=alt.X2('End Year:Q'),
         y=alt.Y('Dynasty:N', axis=alt.Axis(title='Dynasty'), sort='x'),  # Sort by Start Year in descending order
         color=alt.Color('Dynasty:N', legend=None),
-        tooltip=['Dynasty:N', 'King:N', 'Beginning:N', 'End:N', 'Capital:N', 'Successor:N', 'Achievements:N',
-                 'Events:N', 'Occupied Zone:N', 'Wars:N', 'Rituals:N', 'Malpractices:N', 'Employment:N', 'Diets:N',
-                 'Inventions:N', 'Architecture:N']
+        tooltip=['Dynasty:N', 'King:N', 'Beginning:N', 'End:N']
     ).properties(
         width=900
     ).interactive()  # Make the chart interactive with zooming and panning
 
     return chart
 
+
+def display_table(data):
+
+    def format_year(year):
+        modYear = ''
+        if year < 0:
+            modYear = f"{abs(year)} BC"
+        elif year == 0:
+            modYear = year
+        else:
+            modYear = f"{year} AD"
+
+        return modYear
+
+
+    data['Beginning'] = data['Start Year'].apply(format_year)
+    data['End'] = data['End Year'].apply(format_year)
+
+    headerColor = 'black'
+    rowColor = 'white'
+    rowSeparatorColor = 'rgba(0, 0, 0, 0.2)'  # Color for row separators
+
+    # Extract the columns you want to display
+    columns_to_display = ['Dynasty', 'King', 'Beginning', 'End', 'Capital', 'Successor', 'Achievements',
+                 'Events', 'Occupied Zone', 'Wars', 'Rituals', 'Malpractices', 'Employment', 'Diets',
+                 'Inventions', 'Architecture']
+
+    # Create a list of dictionaries, one for each row
+    table_data = []
+
+    for col in columns_to_display:
+        table_data.append({'Attribute': col, 'Value': data[col].values[0]})
+
+    # Create a list of values for the first and second columns separately
+    attribute_column = [data['Attribute'] for data in table_data]
+    value_column = [data['Value'] for data in table_data]
+
+    # Increase the cell height and add CSS styling to align them in the center
+    fig = go.Figure(data=[go.Table(
+        header=dict(
+            values=['<b>Attribute</b>', '<b>Value</b>'],
+            line_color='white',  # Header border color
+            fill_color=headerColor,  # Header background color
+            align=['center', 'center'],  # Align both header columns to the center
+            font=dict(color='white', size=14)  # Header font color and size
+        ),
+        cells=dict(
+            values=[['<b>' + str(attribute) + '</b>' for attribute in attribute_column], ['<b>' + str(value) + '</b>' for value in value_column]],
+            line_color=rowSeparatorColor,  # Row separator color
+            fill_color=[rowColor, rowColor] * len(table_data),  # Cell background color
+            align=['center', 'center'],  # Align both cell columns to the center
+            font=dict(color='black', size=16),  # Cell font color and size
+            # height=40  # Increase cell height
+        ))
+    ])
+
+    # Update layout for better appearance
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=0, b=0),  # Adjust margins
+    )
+    return fig
 
 
 # Function to display the grouped bar chart for a specific dynasty
@@ -78,7 +138,7 @@ def display_grouped_bar_chart(data, selected_dynasty):
                           var_name='Category', value_name='Value')
 
     grouped_bar_chart = alt.Chart(melted_data).mark_bar().encode(
-        x=alt.X('Category:N', axis=alt.Axis(title=' ',labelFontSize=13, labelFontWeight='bold')),
+        x=alt.X('Category:N', axis=alt.Axis(title=' ', labelFontSize=13, labelFontWeight='bold')),
         y=alt.Y('sum(Value):Q', axis=alt.Axis(title=' '), scale=alt.Scale(domain=(1, 10), nice=0)),
         color=alt.Color('Category:N', legend=None),
     ).properties(
@@ -114,8 +174,8 @@ def display_pop_chart(data, selected_dynasty):
 st.markdown("<h1 style='text-align: center;'>History Timeline</h1>", unsafe_allow_html=True)
 
 
-#Error message
-def err(msg:str):
+# Error message
+def err(msg: str):
     st.error(msg)
 
 
@@ -134,7 +194,7 @@ achievement = st.sidebar.text_input('Achievements:')
 event = st.sidebar.text_input('Events:')
 zone = st.sidebar.text_input('Zone:')
 ritual = st.sidebar.text_input('Rituals:')
-malpractice= st.sidebar.text_input('Malpractices:')
+malpractice = st.sidebar.text_input('Malpractices:')
 employment = st.sidebar.text_input('Employment:')
 diet = st.sidebar.text_input('Diets:')
 wars = st.sidebar.text_input('Major Wars fought:')
@@ -175,9 +235,10 @@ if st.sidebar.button('Add Entry'):
                          'Occupied Zone': zone, 'Wars': wars, 'Humanity': humanity, 'Economy': economy,
                          'Education': education, 'Science': science, 'Political': political, 'Craft': craft,
                          'Hindu': hindu, 'Muslim': mus, 'Jain': jain, 'Buddha': bud, 'Sikh': sikh, 'French': fre,
-                         'British': bri, 'Christian': chri, 'Others': oth, 'Rituals': ritual, 'Malpractices': malpractice,
-                         'Employment': employment, 'Diets': diet, 'Kindness':kindness, 'Law': law, 'Justice': justice,
-                         'Religion': religion, 'Inventions': invention, 'Architecture': architecture}
+                         'British': bri, 'Christian': chri, 'Others': oth, 'Rituals': ritual,
+                         'Malpractices': malpractice, 'Employment': employment, 'Diets': diet, 'Kindness': kindness,
+                         'Law': law, 'Justice': justice, 'Religion': religion, 'Inventions': invention,
+                         'Architecture': architecture}
             new_data = pd.DataFrame(new_entry, index=[0])
             data = pd.concat([data, new_data], ignore_index=True)
             data.to_excel('store.xlsx', index=False, engine='openpyxl')
@@ -192,8 +253,15 @@ if search_query:
 # Display the Gantt chart with zoom and pan
 chart = display_gantt_chart(data)
 st.altair_chart(chart, use_container_width=True)
+
+
 # Allow the user to select a dynasty
-selected_dynasty = st.selectbox('Select a Dynasty:', data['Dynasty'].unique())
+selected_dynasty = st.selectbox('Select a Dynasty:', [None] + list(data['Dynasty'].unique()))
+
+if selected_dynasty:
+    data = data[data['Dynasty'].str.contains(selected_dynasty, case=False, na=False)]
+    table = display_table(data)
+    st.plotly_chart(table, use_container_width=True)
 
 col1, col2, col3 = st.columns([2, 0.3, 3])
 
