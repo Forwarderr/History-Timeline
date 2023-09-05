@@ -32,7 +32,6 @@ st.markdown('''
     <style>
     footer {visibility : hidden;}
     header {visibility : hidden;}
-    [class^="viewerBadge"] {visibility: hidden;}
     </style>
 ''', unsafe_allow_html=True)
 
@@ -50,15 +49,14 @@ def display_gantt_chart(data):
 
         return modYear
 
-    # , scale = alt.Scale(domain=(-2000, 2000))
 
     data['Beginning'] = data['Start Year'].apply(format_year)
     data['End'] = data['End Year'].apply(format_year)
 
     chart = alt.Chart(data).mark_bar().encode(
-        x=alt.X('Start Year:Q', axis=alt.Axis(title='Year', format='.0f', labelFontSize=13)),
+        x=alt.X('Start Year:Q', axis=alt.Axis(title='Year', format='.0f')),
         x2=alt.X2('End Year:Q'),
-        y=alt.Y('Dynasty:N', axis=alt.Axis(title='Dynasty', labelFontSize=12, labelFontWeight=500), sort='x'),  # Sort by Start Year in descending order
+        y=alt.Y('Dynasty:N', axis=alt.Axis(title='Dynasty'), sort='x'),  # Sort by Start Year in descending order
         color=alt.Color('Dynasty:N', legend=None),
         tooltip=['Dynasty:N', 'King:N', 'Beginning:N', 'End:N', 'Capital:N', 'Successor:N', 'Achievements:N',
                  'Events:N', 'Occupied Zone:N', 'Wars:N', 'Rituals:N', 'Malpractices:N', 'Employment:N', 'Diets:N']
