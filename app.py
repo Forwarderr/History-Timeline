@@ -117,15 +117,14 @@ def display_table(data):
             line_color=rowSeparatorColor,  # Row separator color
             fill_color=[rowColor, rowColor] * len(table_data),  # Cell background color
             align=['center', 'center'],  # Align both cell columns to the center
-            font=dict(color='black', size=16),  # Cell font color and size
-            # height=40  # Increase cell height
+            font=dict(color='black', size=14),  # Cell font color and size
         ))
     ])
 
     # Update layout for better appearance
     fig.update_layout(
         margin=dict(l=0, r=0, t=0, b=0),  # Adjust margins
-        height = 700
+        height = 800
     )
     return fig
 
