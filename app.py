@@ -125,6 +125,7 @@ def display_table(data):
     # Update layout for better appearance
     fig.update_layout(
         margin=dict(l=0, r=0, t=0, b=0),  # Adjust margins
+        height = 600
     )
     return fig
 
