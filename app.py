@@ -58,7 +58,7 @@ def display_gantt_chart(data):
         x=alt.X('Start Year:Q', axis=alt.Axis(title='Year', format='.0f')),
         x2=alt.X2('End Year:Q'),
         y=alt.Y('Dynasty:N', axis=alt.Axis(title='Dynasty'), sort='x'),  # Sort by Start Year in descending order
-        color=alt.Color('Dynasty:N', legend=None),
+        color=alt.Color('King:N', legend=None),
         tooltip=['Dynasty:N', 'King:N', 'Beginning:N', 'End:N']
     ).properties(
         width=900
@@ -91,7 +91,7 @@ def display_table(data):
     # Extract the columns you want to display
     columns_to_display = ['Dynasty', 'King', 'Beginning', 'End', 'Capital', 'Successor', 'Achievements',
                  'Events', 'Occupied Zone', 'Wars', 'Rituals', 'Malpractices', 'Employment', 'Diets',
-                 'Inventions', 'Architecture']
+                 'Inventions', 'Architecture', 'Advancement', 'Tribes']
 
     # Create a list of dictionaries, one for each row
     table_data = []
@@ -125,13 +125,14 @@ def display_table(data):
     # Update layout for better appearance
     fig.update_layout(
         margin=dict(l=0, r=0, t=0, b=0),  # Adjust margins
+        height = 750
     )
     return fig
 
 
 # Function to display the grouped bar chart for a specific dynasty
 def display_grouped_bar_chart(data, selected_dynasty):
-    filtered_data = data[data['Dynasty'] == selected_dynasty]
+    filtered_data = data[data['King'] == selected_dynasty]
     melted_data = pd.melt(filtered_data, id_vars=['Dynasty'],
                           value_vars=['Economy', 'Political', 'Science', 'Education', 'Craft', 'Humanity', 'Kindness',
                                       'Law', 'Justice', 'Religion'],
@@ -151,7 +152,7 @@ def display_grouped_bar_chart(data, selected_dynasty):
 
 def display_pop_chart(data, selected_dynasty):
     # Load data from the Excel file
-    pie_data = data[data['Dynasty'] == selected_dynasty]
+    pie_data = data[data['King'] == selected_dynasty]
     # Extract values for the Pie Chart
     hindu_value = pie_data['Hindu'].iloc[0]
     muslim_value = pie_data['Muslim'].iloc[0]
@@ -200,6 +201,8 @@ diet = st.sidebar.text_input('Diets:')
 wars = st.sidebar.text_input('Major Wars fought:')
 invention = st.sidebar.text_input('Inventions:')
 architecture = st.sidebar.text_input('Architecture:')
+advancement = st.sidebar.text_input('Advancement:')
+tribe = st.sidebar.text_input('Tribes:')
 humanity = st.sidebar.number_input('Humanity index:', min_value=0, max_value=10)
 economy = st.sidebar.number_input('Economy index:', min_value=0, max_value=10)
 education = st.sidebar.number_input('Education index:', min_value=0, max_value=10)
@@ -238,7 +241,7 @@ if st.sidebar.button('Add Entry'):
                          'British': bri, 'Christian': chri, 'Others': oth, 'Rituals': ritual,
                          'Malpractices': malpractice, 'Employment': employment, 'Diets': diet, 'Kindness': kindness,
                          'Law': law, 'Justice': justice, 'Religion': religion, 'Inventions': invention,
-                         'Architecture': architecture}
+                         'Architecture': architecture, 'Tribes':tribe, 'Advancement':advancement}
             new_data = pd.DataFrame(new_entry, index=[0])
             data = pd.concat([data, new_data], ignore_index=True)
             data.to_excel('store.xlsx', index=False, engine='openpyxl')
@@ -256,10 +259,10 @@ st.altair_chart(chart, use_container_width=True)
 
 
 # Allow the user to select a dynasty
-selected_dynasty = st.selectbox('Select a Dynasty:', [None] + list(data['Dynasty'].unique()))
+selected_dynasty = st.selectbox('Select a Dynasty:', [None] + list(data['King'].unique()))
 
 if selected_dynasty:
-    data = data[data['Dynasty'].str.contains(selected_dynasty, case=False, na=False)]
+    data = data[data['King'].str.contains(selected_dynasty, case=False, na=False)]
     table = display_table(data)
     st.plotly_chart(table, use_container_width=True)
 
