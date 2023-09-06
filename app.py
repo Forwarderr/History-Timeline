@@ -117,8 +117,7 @@ def display_table(data):
             line_color=rowSeparatorColor,  # Row separator color
             fill_color=[rowColor, rowColor] * len(table_data),  # Cell background color
             align=['center', 'center'],  # Align both cell columns to the center
-            font=dict(color='black', size=16),  # Cell font color and size
-            # height=40  # Increase cell height
+            font=dict(color='black', size=14),  # Cell font color and size
         ))
     ])
 
@@ -266,7 +265,7 @@ if selected_dynasty:
     table = display_table(data)
     st.plotly_chart(table, use_container_width=True)
 
-col1, col2, col3 = st.columns([2, 0.3, 3])
+col1, col2, col3 = st.columns([2.5, 0.1, 3])
 
 # Display the Gantt chart and the grouped bar chart for the selected dynasty
 if selected_dynasty:
