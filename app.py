@@ -50,9 +50,8 @@ def display_gantt_chart(data):
 
         return modYear
 
-
-    data['Beginning'] = data['Start Year'].apply(format_year)
-    data['End'] = data['End Year'].apply(format_year)
+    data.loc[:, 'Beginning'] = data['Start Year'].apply(format_year)
+    data.loc[:, 'End'] = data['End Year'].apply(format_year)
 
     chart = alt.Chart(data).mark_bar().encode(
         x=alt.X('Start Year:Q', axis=alt.Axis(title='Year', format='.0f')),
@@ -80,9 +79,8 @@ def display_table(data):
 
         return modYear
 
-
-    data['Beginning'] = data['Start Year'].apply(format_year)
-    data['End'] = data['End Year'].apply(format_year)
+    data.loc[:, 'Beginning'] = data['Start Year'].apply(format_year)
+    data.loc[:, 'End'] = data['End Year'].apply(format_year)
 
     headerColor = 'black'
     rowColor = 'white'
