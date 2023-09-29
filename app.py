@@ -53,10 +53,15 @@ def display_gantt_chart(data):
     data.loc[:, 'Beginning'] = data['Start Year'].apply(format_year)
     data.loc[:, 'End'] = data['End Year'].apply(format_year)
 
+    max_end_years = data.groupby('Dynasty')['End Year'].max().reset_index()
+    data = data.merge(max_end_years, on='Dynasty', suffixes=('', '_max'))
+
     chart = alt.Chart(data).mark_bar().encode(
-        x=alt.X('Start Year:Q', axis=alt.Axis(title='Year', format='.0f')),
+        x=alt.X('Start Year:Q', axis=alt.Axis(title='Year', format='.2f'),
+                scale=alt.Scale(domain=[data['Start Year'].min(), data['End Year'].max()])),
         x2=alt.X2('End Year:Q'),
-        y=alt.Y('Dynasty:N', axis=alt.Axis(title='Dynasty'), sort='x'),  # Sort by Start Year in descending order
+        y=alt.Y('Dynasty:N', axis=alt.Axis(title='Dynasty'),
+                sort=alt.SortField(field='End Year_max', order='ascending')),
         color=alt.Color('King:N', legend=None),
         tooltip=['Dynasty:N', 'King:N', 'Beginning:N', 'End:N']
     ).properties(
@@ -179,71 +184,6 @@ def err(msg: str):
 
 # Load existing data or create a new DataFrame
 data = load_data()
-
-# Sidebar for user input with smaller height
-st.sidebar.header('Add New Entry')
-dynasty = st.sidebar.text_input('Dynasty name:')
-king = st.sidebar.text_input("King:")
-start_year = st.sidebar.number_input('Start Year:', min_value=-2000, max_value=2000)
-end_year = st.sidebar.number_input('End Year:', min_value=-2000, max_value=2000)
-capital = st.sidebar.text_input('Capital:')
-successor = st.sidebar.text_input('Successor:')
-achievement = st.sidebar.text_input('Achievements:')
-event = st.sidebar.text_input('Events:')
-zone = st.sidebar.text_input('Zone:')
-ritual = st.sidebar.text_input('Rituals:')
-malpractice = st.sidebar.text_input('Malpractices:')
-employment = st.sidebar.text_input('Employment:')
-diet = st.sidebar.text_input('Diets:')
-wars = st.sidebar.text_input('Major Wars fought:')
-invention = st.sidebar.text_input('Inventions:')
-architecture = st.sidebar.text_input('Architecture:')
-advancement = st.sidebar.text_input('Advancement:')
-tribe = st.sidebar.text_input('Tribes:')
-humanity = st.sidebar.number_input('Humanity index:', min_value=0, max_value=10)
-economy = st.sidebar.number_input('Economy index:', min_value=0, max_value=10)
-education = st.sidebar.number_input('Education index:', min_value=0, max_value=10)
-science = st.sidebar.number_input('Science index:', min_value=0, max_value=10)
-political = st.sidebar.number_input('Political index:', min_value=0, max_value=10)
-craft = st.sidebar.number_input('Craft index:', min_value=0, max_value=10)
-religion = st.sidebar.number_input('Religion index:', min_value=0, max_value=10)
-kindness = st.sidebar.number_input('King\'s kindness index:', min_value=0, max_value=10)
-law = st.sidebar.number_input('Law index:', min_value=0, max_value=10)
-justice = st.sidebar.number_input('Justice index:', min_value=0, max_value=10)
-hindu = st.sidebar.number_input('Hindu Population:', min_value=0)
-mus = st.sidebar.number_input('Muslim Population:', min_value=0)
-jain = st.sidebar.number_input('Jain Population:', min_value=0)
-sikh = st.sidebar.number_input('Sikh Population:', min_value=0)
-bud = st.sidebar.number_input('Buddha Population:', min_value=0)
-fre = st.sidebar.number_input('French Population:', min_value=0)
-bri = st.sidebar.number_input('British Population:', min_value=0)
-chri = st.sidebar.number_input('Christian Population', min_value=0)
-oth = st.sidebar.number_input('Other Population:', min_value=0)
-
-
-# Add new entry to the DataFrame and update the Excel file
-if st.sidebar.button('Add Entry'):
-    if start_year > end_year:
-        err('Start Year must be less than or equal to End Year.')
-    else:
-        if any(value in ["", None] for value in [dynasty, king, capital, successor, achievement, event, zone, wars,
-                                                 ritual, malpractice, employment, diet, invention, architecture]):
-            err('1 or more field left blank')
-        else:
-            new_entry = {'Dynasty': dynasty, 'King': king, 'Start Year': start_year, 'End Year': end_year,
-                         'Capital': capital, 'Successor': successor, 'Achievements': achievement, 'Events': event,
-                         'Occupied Zone': zone, 'Wars': wars, 'Humanity': humanity, 'Economy': economy,
-                         'Education': education, 'Science': science, 'Political': political, 'Craft': craft,
-                         'Hindu': hindu, 'Muslim': mus, 'Jain': jain, 'Buddha': bud, 'Sikh': sikh, 'French': fre,
-                         'British': bri, 'Christian': chri, 'Others': oth, 'Rituals': ritual,
-                         'Malpractices': malpractice, 'Employment': employment, 'Diets': diet, 'Kindness': kindness,
-                         'Law': law, 'Justice': justice, 'Religion': religion, 'Inventions': invention,
-                         'Architecture': architecture, 'Tribes':tribe, 'Advancement':advancement}
-            new_data = pd.DataFrame(new_entry, index=[0])
-            data = pd.concat([data, new_data], ignore_index=True)
-            data.to_excel('store.xlsx', index=False, engine='openpyxl')
-            st.experimental_rerun()
-
 
 # Add a search box above the Gantt chart
 search_query = st.text_input('Search for Dynasty:')
